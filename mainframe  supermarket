@@ -297,7 +297,7 @@ void intro()
  cout<<"BILLING";
  gotoxy(35,17);
  cout<<"PROJECT";
- cout<<"\n\nMADE BY : stephen deline jr";
+ cout<<"\n\nMADE BY :apocalypseapocalypsecoder0";
  cout<<"\n\n? : ";
  getch();
 
