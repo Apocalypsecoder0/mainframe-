@@ -1,0 +1,1485 @@
+/*
+  Name: mainframe supermarkets Program
+  Author: Stephen Lloyd Deline Jr
+  Date Started: june/26/20018
+  Date Stop: ?
+  Version 1.5
+  Description: C++ mainframe Database System  for engine prototype templateing
+*/
+//TODO (#0#): Work on prototype_information
+//TODO (#1#): Work on Reservation 
+//TODO (#2#): Work on template Assignment
+//TODO (#3#): Work out the Bugs
+
+ //***************************************************************
+//                   HEADER FILE USED IN PROJECT
+//****************************************************************
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+#include<conio.h>
+#include<stdio.h>
+#include<process.h>
+#include<fstream.h>
+
+//***************************************************************
+//                   CLASS USED IN PROJECT
+//****************************************************************
+
+class product
+{
+ int pno;
+ char name[50];
+ float price,qty,tax,dis;
+ public:
+	void create_product()
+	{
+	 cout<<"\nPlease Enter The Product No. of The Product ";
+	 cin>>pno;
+	 cout<<"\n\nPlease Enter The Name of The Product ";
+	 gets(name);
+	 cout<<"\nPlease Enter The Price of The Product ";
+	 cin>>price;
+	 cout<<"\nPlease Enter The Discount (%) ";
+	 cin>>dis;
+	 }
+
+	void show_product()
+	{
+	 cout<<"\nThe Product No. of The Product : "<<pno;
+	 cout<<"\nThe Name of The Product : ";
+	 puts(name);
+	 cout<<"\nThe Price of The Product : "<<price;
+	 cout<<"\nDiscount : "<<dis;
+	 }
+
+  int  retpno()
+  {return pno;}
+
+  float retprice()
+  {return price;}
+
+  char* retname()
+  {return name;}
+
+  int retdis()
+  {return dis;}
+
+};         //class ends here
+
+
+
+//***************************************************************
+//    	global declaration for stream object, object
+//****************************************************************
+
+ fstream fp;
+ product pr;
+
+
+//***************************************************************
+//    	function to write in file
+//****************************************************************
+
+void write_product()
+   {
+    fp.open("Shop.dat",ios::out|ios::app);
+    pr.create_product();
+    fp.write((char*)&pr,sizeof(product));
+    fp.close();
+    cout<<"\n\nThe Product Has Been Created ";
+    getch();
+   }
+
+
+//***************************************************************
+//    	function to read all records from file
+//****************************************************************
+
+
+void display_all()
+{
+    clrscr();
+    cout<<"\n\n\n\t\tDISPLAY ALL RECORD !!!\n\n";
+    fp.open("Shop.dat",ios::in);
+    while(fp.read((char*)&pr,sizeof(product)))
+	{
+	 pr.show_product();
+	 cout<<"\n\n====================================\n";
+	 getch();
+	 }
+    fp.close();
+    getch();
+}
+
+
+//***************************************************************
+//    	function to read specific record from file
+//****************************************************************
+
+
+void display_sp(int n)
+{
+    int flag=0;
+    fp.open("Shop.dat",ios::in);
+    while(fp.read((char*)&pr,sizeof(product)))
+	{
+	 if(pr.retpno()==n)
+		{
+		 clrscr();
+		 pr.show_product();
+		 flag=1;
+		}
+	}
+    fp.close();
+if(flag==0)
+ cout<<"\n\nrecord not exist";
+    getch();
+}
+
+
+//***************************************************************
+//    	function to modify record of file
+//****************************************************************
+
+
+void modify_product()
+{
+    int no,found=0;
+    clrscr();
+    cout<<"\n\n\tTo Modify ";
+    cout<<"\n\n\tPlease Enter The Product No. of The Product";
+    cin>>no;
+    fp.open("Shop.dat",ios::in|ios::out);
+    while(fp.read((char*)&pr,sizeof(product)) && found==0)
+	   {
+	    if(pr.retpno()==no)
+		   {
+		    pr.show_product();
+		    cout<<"\nPlease Enter The New Details of Product"<<endl;
+		    pr.create_product();
+		    int pos=-1*sizeof(pr);
+		    fp.seekp(pos,ios::cur);
+		    fp.write((char*)&pr,sizeof(product));
+		    cout<<"\n\n\t Record Updated";
+		    found=1;
+		   }
+	     }
+    fp.close();
+    if(found==0)
+    cout<<"\n\n Record Not Found ";
+    getch();
+}
+
+
+//***************************************************************
+//    	function to delete record of file
+//****************************************************************
+
+
+void delete_product()
+   {
+    int no;
+    clrscr();
+    cout<<"\n\n\n\tDelete Record";
+    cout<<"\n\nPlease Enter The product no. of The Product You Want To Delete";
+    cin>>no;
+    fp.open("Shop.dat",ios::in|ios::out);
+    fstream fp2;
+    fp2.open("Temp.dat",ios::out);
+    fp.seekg(0,ios::beg);
+    while(fp.read((char*)&pr,sizeof(product)))
+	{
+	 if(pr.retpno()!=no)
+		{
+		 fp2.write((char*)&pr,sizeof(product));
+		 }
+	 }
+    fp2.close();
+    fp.close();
+    remove("Shop.dat");
+    rename("Temp.dat","Shop.dat");
+    cout<<"\n\n\tRecord Deleted ..";
+    getch();
+    }
+
+
+//***************************************************************
+//    	function to display all products price list
+//****************************************************************
+
+    void menu()
+    {
+     clrscr();
+     fp.open("Shop.dat",ios::in);
+     if(!fp)
+     {
+       cout<<"ERROR!!! FILE COULD NOT BE OPEN\n\n\n Go To Admin Menu to create File";
+       cout<<"\n\n\n Program is closing ....";
+       getch();
+       exit(0);
+     }
+
+     cout<<"\n\n\t\tProduct MENU\n\n";
+	  cout<<"====================================================\n";
+	  cout<<"P.NO.\t\tNAME\t\tPRICE\n";
+	  cout<<"====================================================\n";
+
+      while(fp.read((char*)&pr,sizeof(product)))
+	 {
+	   cout<<pr.retpno()<<"\t\t"<<pr.retname()<<"\t\t"<<pr.retprice()<<endl;
+	}
+     fp.close();
+}
+
+
+
+
+//***************************************************************
+//    	function to place order and generating bill for Products
+//****************************************************************
+
+   void place_order()
+   {
+    int  order_arr[50],quan[50],c=0;
+    float amt,damt,total=0;
+    char ch='Y';
+    menu();
+    cout<<"\n============================";
+    cout<<"\n    PLACE YOUR ORDER";
+    cout<<"\n============================\n";
+    do{
+	 cout<<"\n\nEnter The Product No. Of The Product : ";
+	 cin>>order_arr[c];
+	 cout<<"\nQuantity in number : ";
+	 cin>>quan[c];
+	 c++;
+	 cout<<"\nDo You Want To Order Another Product ? (y/n)";
+	 cin>>ch;
+    }while(ch=='y' ||ch=='Y');
+    cout<<"\n\nThank You For Placing The Order";getch();clrscr();
+      cout<<"\n\n********************************INVOICE************************\n";
+      cout<<"\nPr No.\tPr Name\tQuantity \tPrice \tAmount \tAmount after discount\n";
+      for(int x=0;x<=c;x++)
+	{
+		 fp.open("Shop.dat",ios::in);
+		 fp.read((char*)&pr,sizeof(product));
+		  while(!fp.eof())
+			{
+			if(pr.retpno()==order_arr[x])
+				{
+				 amt=pr.retprice()*quan[x];
+				 damt=amt-(amt*pr.retdis()/100);
+				 cout<<"\n"<<order_arr[x]<<"\t"<<pr.retname()<<"\t"<<quan[x]<<"\t\t"<<pr.retprice()<<"\t"<<amt<<"\t\t"<<damt;
+				 total+=damt;
+				}
+			fp.read((char*)&pr,sizeof(product));
+			}
+
+		 fp.close();
+	 }
+       cout<<"\n\n\t\t\t\t\tTOTAL = "<<total;
+    getch();
+    }
+
+//***************************************************************
+//    	INTRODUCTION FUNCTION
+//****************************************************************
+
+void intro()
+{
+ clrscr();
+ gotoxy(31,11);
+ cout<<"SUPER MARKET";
+ gotoxy(35,14);
+ cout<<"BILLING";
+ gotoxy(35,17);
+ cout<<"PROJECT";
+ cout<<"\n\nMADE BY : stephen deline jr";
+ cout<<"\n\n? : ";
+ getch();
+
+}
+
+
+
+
+//***************************************************************
+//    	ADMINSTRATOR MENU FUNCTION
+//****************************************************************
+void admin_menu()
+{
+  clrscr();
+  char ch2;
+  cout<<"\n\n\n\tADMIN MENU";
+  cout<<"\n\n\t1.CREATE PRODUCT";
+  cout<<"\n\n\t2.DISPLAY ALL PRODUCTS";
+  cout<<"\n\n\t3.QUERY ";
+  cout<<"\n\n\t4.MODIFY PRODUCT";
+  cout<<"\n\n\t5.DELETE PRODUCT";
+  cout<<"\n\n\t6.VIEW PRODUCT MENU";
+  cout<<"\n\n\t7.BACK TO MAIN MENU";
+  cout<<"\n\n\tPlease Enter Your Choice (1-7) ";
+  ch2=getche();
+  switch(ch2)
+  {
+    case '1': clrscr();
+	      write_product();
+	      break;
+    case '2': display_all();break;
+    case '3':
+	       int num;
+	       clrscr();
+	       cout<<"\n\n\tPlease Enter The Product No. ";
+	       cin>>num;
+	       display_sp(num);
+	       break;
+      case '4': modify_product();break;
+      case '5': delete_product();break;
+      case '6': menu();
+		getch();
+      case '7': break;
+      default:cout<<"\a";admin_menu();
+   }
+}
+
+struct engine;  //Forward Declaration of Engine structure
+
+
+// mainfrsme LIST STRUCTURE AND FUNCTION DECLARATIONS 
+
+
+
+struct mainframe                          // Structure for Airline node, includes strings for mainframe name 
+{                                      // pointer locations to the next mainframe and also to the engine list for that mainframe         
+	char *mainframename;
+	struct mainframe *next;
+	struct engine *node1;
+} *start1 = NULL;
+
+
+mainframe* create_mainframe_node(mainframe *start1);             //Function Declarations
+mainframe* enter_mainframe_info(mainframe *node);
+mainframe* delete_mainframe_node(mainframe *start1);
+void print_mainframe_list(mainframe *start1);
+mainframe* enter_engine_menu(mainframe *start1);
+void write_to_file(mainframe *start1);
+mainframe * read_from_file();
+mainframe* mainframe_menu(mainframe *start1);
+
+
+
+
+//-----------------------------------   FLIGHT LIST STRUCTURE AND FUNCTION DECLARATIONS ----------------------------------------
+
+struct prototype;                              //Forward Declaration of prototype structure
+
+
+struct engine                          // Structure for engine node, includes strings for enginename, from, to and time with 
+{                                      // pointer locations to the next engine and also to the prototype list          
+	char *enginename;
+	char *departure_location;
+	char *arrival_location;
+	char *take_off_time;
+	struct engine *next;
+	struct prototype *node2;
+} *start2 = NULL;
+
+
+engine* create_engine_node(engine *start2);             //Function Declarations
+engine* enter_engine_info(engine *node);
+engine* delete_engine_node(engine *start2);
+void print_engine_list(engine *start2);
+engine* enter_prototype_menu(engine *start2);
+engine* engine_menu(engine *start2);
+
+
+
+//-----------------------------------   PASSENGER LIST STRUCTURE AND FUNCTION DECLARATIONS ----------------------------------------
+
+
+struct prototype                                 //Passenger Structure includes name of the prototype and the ponter to the next
+{                                                // prototype node, structure declaration also declares start as the first node
+	char *name;                                  // and declares it NULL.
+	struct prototype *next;
+} *start3 = NULL;
+
+
+
+prototype* create_prototype_node(prototype *start3);             //Function Declarations
+prototype* enter_prototype_info(prototype *node);
+prototype* delete_prototype_node(prototype *start3);
+prototype* prototype_menu(prototype *start3);
+void print_prototype_list(prototype *node);
+ 
+
+
+
+
+//----------------------------- MEMBER FUNCTIONS TO MANIPULATE THE Mainframe LINKED LIST --------------------------------------------
+
+
+mainframe* create_mainframe_node(mainframe *start1)         // Creates a sorted list of mainframes (default entry sort condition by mainframe name)
+{                                                   // by entering the mainframe name in a node at the sorted position, 
+                                                    // it calls the function "enter_mainframe_info() to ask the 
+	if (start1 == NULL)                             // user for its information
+	{
+		start1 = (mainframe *) malloc(sizeof(mainframe));
+		start1 = enter_mainframe_info(start1);
+		start1->next = NULL;
+	}
+	else
+	{
+		mainframe *count_node1, *count_node2, *node;
+		node = (mainframe *) malloc(sizeof(mainframe));
+		node = enter_mainframe_info(node);
+		for (count_node1 = start1; (count_node1 != NULL) && (strcmp(count_node1->mainframename, node->mainframename) <= 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1 == start1)
+		{
+			node->next = start1;
+			start1 = node;
+		}
+		else if (count_node1 == NULL)
+		{
+			count_node2->next = node;
+			node->next = NULL;
+		}
+		else
+		{
+			count_node2->next = node;
+			node->next = count_node1;
+		}
+	}
+	return start1;
+}
+
+
+mainframe* enter_mainframe_info(mainframe *node)             // Function to enter the information about the mainframe, this function is
+{                                                      // called from the function create_mainframe_node(mainframe *start1)by itself.   
+	printf("\n");                                      
+	printf(" Welcome to mainframe\n");
+	printf("Please enter the mainframe server Name\n");
+	printf("\n");
+	fflush(stdin);
+	node->mainframename = new char [80];
+	gets(node->mainframename);
+	node->node1 = NULL;
+	return node;
+}
+
+mainframe* delete_mainframe_node(mainframe *start)          // Function to delete the name of a mainframe, function 
+{                                                    // searches for the name and deletes if it is found.
+	if(start1 == NULL)
+	{
+		printf("\n");
+		printf("Sorry, this mainframe is not operational at this moment\n");
+	}
+	else
+	{
+		char mainframename[80];
+		printf("\n");
+		printf("Please enter the  name of the mainframe  you want to delete\n");
+		fflush(stdin);
+		gets(mainframename);
+		mainframe *count_node1, *count_node2;
+		mainframe *temp;
+		for(count_node1 = start1; (count_node1 != NULL) && (strcmp(count_node1->mainframename, mainframename) != 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1!= NULL)
+		{
+			if (count_node1 == start1)
+			{
+				temp = start1;
+				start1 = start1->next;
+				free(temp);
+			}
+			else if(count_node1->next == NULL && count_node1 != start1) 
+			{
+				temp = count_node1;
+				count_node2->next = NULL;
+				free (temp);
+			}
+			else
+			{
+				temp = count_node1;
+				count_node2->next = count_node1->next;
+				free (temp);
+			}
+		}
+		else 
+		{
+			printf("\n");
+			printf("Sorry, this mainframe is currently not in service at this moment\n");
+		} 
+	}
+	return start1;
+}
+
+
+void print_mainframe_list(mainframe *start)                       //Function to print all the mainframes operating on the server
+{
+	if (start1 == NULL)
+	{
+		printf("\n");
+		printf("Sorry, this server is not operational at this moment\n");
+	}
+	else
+	{
+		printf("\n");
+		mainframe *count;
+		for (count = start1; count != NULL; count = count->next)
+		printf("%s\n", count->mainframename);
+	}
+}
+
+mainframe* enter_engine_menu(mainframe *start1)        // Function to search for the mainframe entered and enter its engine list menu
+{
+	char mainframename[80];
+	printf("\n");
+	printf("Welcome to the Engine list Menu\n");
+	printf("Enter the Mainframe name you wish to check\n");
+	fflush(stdin);
+	gets(mainframename);
+	mainframe *count;
+	for(count = start1; (count != NULL) && (strcmp(count->mainframename, mainframename) != 0); count = count->next);
+	if(count == NULL)
+	{
+		printf("\n");
+		printf("Sorry, this mainframe does not operate in this server\n");
+		return start1;
+	}
+	else
+	{
+		printf("\n");
+		count->node1 = engine_menu(count->node1);
+		return start1;
+	}
+}
+
+
+void write_to_file(mainframe *start1)
+{
+	FILE *fp;
+	mainframe *count1;
+	engine *count2;
+	prototype *count3;
+	int length = 0;
+	int mainframe_count = 0;
+	int prototype_count = 0;
+	int engine_count = 0;
+	fp = fopen("mainframe.txt","wb");
+
+	// Determine number of mainframes and write to file
+	for( count1 = start1; count1 != NULL; count1 = count1->next) ++mainframe_count;
+	fwrite(&mainframe_count,sizeof(int),1,fp);
+
+
+	// Loop through and write mainframes data to file
+	for( count1 = start1; count1 != NULL; count1 = count1->next)
+	{
+		// Determine length of mainframe name and write to file
+		length = strlen(count1->mainframename);
+		fwrite(&length,sizeof(int),1,fp);
+
+		// Write mainframe name to file
+		fwrite(count1->mainframename,length,1,fp);
+
+		// Determine number of engines for the mainframe and write to file
+		for( count2 = count1->node1; count2 != NULL; count2 = count2->next) ++engine_count;
+		fwrite(&engine_count,sizeof(int),1,fp);
+
+		// Loop through and write engine data for the mainframe to file
+		for( count2 = count1->node1; count2 != NULL; count2 = count2->next)
+		{
+			// Determine length of engine name and write to file
+			length = strlen(count2->enginename);
+			fwrite(&length,sizeof(int),1,fp);
+
+			// Write engine name to file
+			fwrite(count2->enginename,length,1,fp);
+
+			// Determine length of departure location and write to file
+			length = strlen(count2->departure_location);
+			fwrite(&length,sizeof(int),1,fp);
+
+			// Write departure location to file
+			fwrite(count2->departure_location,length,1,fp);
+
+			// Determine length of arrival location and write to file
+			length = strlen(count2->arrival_location);
+			fwrite(&length,sizeof(int),1,fp);
+
+			// Write departure location to file
+			fwrite(count2->arrival_location,length,1,fp);
+
+			// Determine length of take off time and write to file
+			length = strlen(count2->take_off_time);
+			fwrite(&length,sizeof(int),1,fp);
+
+			// Write departure location to file
+			fwrite(count2->take_off_time,length,1,fp);
+
+
+			// Determine number of prototypes for this engine and write to file
+			for( count3 = count2->node2; count3 != NULL; count3 = count3->next) ++prototype_count;
+			fwrite(&prototype_count,sizeof(int),1,fp);
+
+			// Loop through and write prototype data for the engine to file
+			for( count3 = count2->node2; count3 != NULL; count3 = count3->next)
+			{
+				// Determine length of prototype name and write to file
+				length = strlen(count3->name);
+				fwrite(&length,sizeof(int),1,fp);
+
+				// Write prototype name to file
+				fwrite(count3->name,length,1,fp);
+			}
+
+
+		}
+
+
+	}
+	fclose(fp);
+
+}
+
+
+mainframe * read_from_file()
+{
+	FILE *fp;
+	mainframe *start, *curr, *temp;
+	int length = 0;
+	int mainframe_count= 0;
+	int engine_count = 0;
+	int prototype_count = 0;
+
+	// Initialize pointers
+	start = curr = NULL;
+
+	// Open file for reading
+	fp = fopen("mainframe.txt","rb");
+
+	while(!feof(fp))
+	{
+		// Read in number of mainframes stored in file
+		if( fp == NULL)
+			mainframe_count = 0;
+		else
+			fread(&mainframe_count,sizeof(int),1,fp);
+
+		// Loop through "mainframe_count" mainframes
+		for( ; mainframe_count > 0; --mainframe_count )
+		{
+			// allocate room for a single mainframe structure and engine link to NULL
+			temp = (mainframe *)malloc(sizeof(mainframe));
+			temp->next = NULL;
+			temp->node1 = NULL;
+
+			// read mainframe name length
+			fread(&length,sizeof(int),1,fp);
+
+			//allocate sufficent memory for the mainframe name
+			temp->mainframename = (char *)malloc(length+1);
+
+			// read in mainframe's name and NULL terminate
+			fread(temp->mainframename,length,1,fp);
+			temp->mainframename[length] = 0;
+
+			// Add current mainframe to end of growing list of mainframes
+			if( start == NULL ) 
+			{
+				start = curr = temp;
+			}
+			else
+			{
+				curr->next = temp;
+				curr = curr->next;
+			}
+
+			// Read in number of engines stored for the mainframe in file
+			fread(&engine_count,sizeof(int),1,fp);
+
+			// Loop through "engine_count" engine
+			for( ; engine_count > 0; --engine_count )
+			{
+				// allocate room for a single engine structure and set prototype link to NULL
+				curr->node1 = (engine *)malloc(sizeof(engine));
+				curr->node1->next = NULL;
+				curr->node1->node2 = NULL;
+
+				// read engine name length
+				fread(&length,sizeof(int),1,fp);
+
+				//allocate sufficent memory for the engine name
+				curr->node1->enginename = (char *)malloc(length+1);
+
+				// read in engine name and NULL terminate
+				fread(curr->node1->enginename,length,1,fp);
+				curr->node1->enginename[length] = 0;
+
+				// read departure location length
+				fread(&length,sizeof(int),1,fp);
+
+				//allocate sufficent memory for the departure location
+				curr->node1->departure_location = (char *)malloc(length+1);
+
+				// read in departure location and NULL terminate
+				fread(curr->node1->departure_location,length,1,fp);
+				curr->node1->departure_location[length] = 0;
+
+				// read arrival location length
+				fread(&length,sizeof(int),1,fp);
+
+				//allocate sufficent memory for the arrival location
+				curr->node1->arrival_location = (char *)malloc(length+1);
+
+				// read in arrival location and NULL terminate
+				fread(curr->node1->arrival_location,length,1,fp);
+				curr->node1->arrival_location[length] = 0;
+
+				// read take off time length
+				fread(&length,sizeof(int),1,fp);
+
+				//allocate sufficent memory for the take off time
+				curr->node1->take_off_time = (char *)malloc(length+1);
+
+				// read in take off time and NULL terminate
+				fread(curr->node1->take_off_time,length,1,fp);
+				curr->node1->take_off_time[length] = 0;
+
+				// Add current engine to end of growing list of engines
+				if( start->node1 == NULL ) 
+				{
+					start->node1 = curr->node1 = temp->node1;
+				}
+				else
+				{
+					curr->node1->next = temp->node1;
+					curr->node1 = curr->node1->next;
+				}
+
+			
+				// Read in number of prototypes stored for that file
+				fread(&prototype_count,sizeof(int),1,fp);
+
+				// Loop through "prototype_count" prototypes for this engine
+				for( ; prototype_count > 0; --prototype_count )
+				{
+					// allocate room for a single prototype structure
+					curr->node1->node2 = (prototype *)malloc(sizeof(prototype));
+					curr->node1->node2->next = NULL;
+
+					// read prototype name length
+					fread(&length,sizeof(int),1,fp);
+
+					//allocate sufficent memory for the prototype name
+					curr->node1->node2->name = (char *)malloc(length+1);
+
+					// read in prototype name and NULL terminate
+					fread(curr->node1->node2->name,length,1,fp);
+					curr->node1->node2->name[length] = 0;
+
+
+					// Add current prototype to end of growing list of prototypes for this engine
+					if( start->node1->node2 == NULL ) 
+					{
+						start->node1->node2 = curr->node1->node2 = temp->node1->node2;
+					}
+					else
+					{
+						curr->node1->node2->next = temp->node1->node2;
+						curr->node1->node2 = curr->node1->node2->next;
+					}
+				}
+
+			}
+		}
+	}
+	fclose(fp);
+	return start;
+
+}
+
+mainframe* mainframe_menu(mainframe *start)                            // Menu Function which is handles the mainframelist
+{                                                                      
+	int choice;
+	printf("Welcome to the Main Menu\n");
+	printf("Please enter your choice from the menu shown below\n");
+	printf("1: Add a new mainframe to this server\n");
+	printf("2: Delete an mainframe from the server\n");
+	printf("3: Display the Mainframe List at this server\n");
+    printf("4: Enter Engine menu for an mainframe\n");
+	printf("5: Exit the program\n");
+	scanf ("%d", &choice);
+	switch(choice)
+	{
+	case 1: 
+		{ 
+			start1 = create_mainframe_node(start1);
+		} break;
+	case 2:
+		{  
+			start1 = delete_mainframe_node(start1);
+		} break;
+	case 3:
+		{
+			print_mainframe_list(start1);
+		} break;
+	case 4:
+		{
+			start1 = enter_engine_menu(start1);
+		} break;
+	case 5:
+		{
+			write_to_file(start1);
+			exit(1);
+		} break;
+	default:
+		{
+			start1 = mainframe_menu(start1);
+		} break;
+	}
+	printf("\n");
+	start1 = mainframe_menu(start1);
+	return start1;
+}
+
+
+//----------------------------- MEMBER FUNCTIONS TO MANIPULATE THE FLIGHT LINKED LIST --------------------------------------------
+
+
+engine* create_engine_node(engine *start2)           // Creates a sorted list of engines (default entry sort condition by engine no.)
+{                                                    // by entering the engine node at the sorted position, 
+    printf("\n");                                    // it calls the function "enter_engine_info() to ask the 
+	if (start2 == NULL)                              // user for its information
+	{
+		start2 = (engine *) malloc(sizeof(engine));
+		start2 = enter_engine_info(start2);
+		start2->next = NULL;
+	}
+	else
+	{
+		engine *count_node1, *count_node2, *node;
+		node = (engine *) malloc(sizeof(engine));
+		node = enter_engine_info(node);
+		for (count_node1 = start2; (count_node1 != NULL) && (strcmp(count_node1->enginename, node->enginename) <= 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1 == start2)
+		{
+			node->next = start2;
+			start2 = node;
+		}
+		else if (count_node1 == NULL)
+		{
+			count_node2->next = node;
+			node->next = NULL;
+		}
+		else
+		{
+			count_node2->next = node;
+			node->next = count_node1;
+		}
+	}
+	return start2;
+}
+
+
+engine* enter_engine_info(engine *node)               // Function to enter the information about the engine, this function is
+{                                                    // called from the function create_engine_node(engine *start)by itself.   
+	printf(" Welcome to the Engine List\n");
+	printf("Please enter the Engine Name\n");
+	fflush(stdin);
+	node->enginename = new char [80];
+	gets(node->enginename);
+	printf("Please enter the Departure Location\n");
+	fflush(stdin);
+	node->departure_location = new char [80];
+	gets(node->departure_location);
+	printf("Please enter the Arrival Location\n");
+	fflush(stdin);
+	node->arrival_location = new char [80];
+	gets(node->arrival_location);
+	printf("Please enter the Take off time\n");
+	fflush(stdin);
+	node->take_off_time = new char [80];
+	gets(node->take_off_time);
+	node->node2 = NULL;
+	return node;
+}
+
+engine* delete_engine_node(engine *start2)            // Function to delete the name of a engine, function 
+{                                                     // searches for the name and deletes if it is found.
+	printf("\n");
+	if(start2 == NULL)
+	{
+		printf("Sorry, no available Engines today\n");
+	}
+	else
+	{
+		char enginename[80];
+		printf("Please enter the engine name you want to delete\n");
+		fflush(stdin);
+		gets(enginename);
+		engine *count_node1, *count_node2;
+		engine *temp;
+		for(count_node1 = start2; (count_node1 != NULL) && (strcmp(count_node1->enginename, enginename) != 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1!= NULL)
+		{
+			if (count_node1 == start2)
+			{
+				temp = start2;
+				start2 = start2->next;
+				free(temp);
+			}
+			else if(count_node1->next == NULL && count_node1 != start2) 
+			{
+				temp = count_node1;
+				count_node2->next = NULL;
+				free (temp);
+			}
+			else
+			{
+				temp = count_node1;
+				count_node2->next = count_node1->next;
+				free (temp);
+			}
+		}
+		else 
+		{
+			printf("\n");
+			printf("Sorry, this name was not found in this list\n");
+		} 
+	}
+	return start2;
+}
+
+
+void print_engine_list(engine *start2)
+{
+	printf("\n");
+	if (start2 == NULL)
+	{
+		printf("Sorry, the Engine List is empty\n");
+	}
+	else
+	{
+		engine *count;
+		for (count = start2; count != NULL; count = count->next)
+		{
+			printf("%s\n", count->enginename);
+		    printf("From %s\n", count->departure_location);
+		    printf("To %s\n", count->arrival_location);
+		    printf("Take off Time : %s\n", count->take_off_time);
+			printf("\n");
+		}
+	}
+}
+
+engine* enter_prototype_menu(engine *start2)        // Function to search for the engine entered and enter its prototype list menu
+{
+	printf("\n");
+	char enginename[80];
+	printf("Welcome to the prototype list Menu\n");
+	printf("Enter the Engine name you wish to check\n");
+	fflush(stdin);
+	gets(enginename);
+	engine *count;
+	for(count = start2; (count != NULL) && (strcmp(count->enginename, enginename) != 0); count = count->next);
+	if(count == NULL)
+	{
+		printf("Sorry, this engine is not available\n");
+		return start2;
+	}
+	else
+	{
+		count->node2 = prototype_menu(count->node2);
+		return start2;
+	}
+}
+
+engine* engine_menu(engine *start2)                          // Menu Function which is handles the enginelist for an mainframe
+{                                                                      
+	int choice;
+	printf("Welcome to the Engine menu\n");
+	printf("Please enter your choice from the menu shown below\n");
+	printf("1: Add a new Engine to this Airline\n");
+	printf("2: Delete a Engine from the Airline\n");
+	printf("3: Display the Engine List for the Airline\n");
+    printf("4: Enter prototype menu for a engine\n");
+	printf("5: Return back to the Main Menu\n");
+	scanf ("%d", &choice);
+	switch(choice)
+	{
+	case 1: 
+		{ 
+			start2 = create_engine_node(start2);
+		} break;
+	case 2:
+		{  
+			start2 = delete_engine_node(start2);
+		} break;
+	case 3:
+		{
+			print_engine_list(start2);
+		} break;
+	case 4:
+		{
+			start2 = enter_prototype_menu(start2);
+		} break;
+	case 5:
+		{
+			return start2;
+		} break;
+	default:
+		{
+			start2 = engine_menu(start2);
+		} break;
+	}
+	printf("\n");
+	start2 = engine_menu(start2);
+	return start2;
+}
+
+
+//----------------------------- MEMBER FUNCTIONS TO MANIPULATE THE  PASSENGER LINKED LIST --------------------------------------------
+
+
+
+
+prototype* create_prototype_node(prototype *start3)  //Creates a sorted list of prototypes by entering the prototype node at the
+{                                                    // sorted position, it calls the function "enter_prototype_info() to
+    printf("\n");                                    // ask the user for its information
+	if (start3 == NULL)                              
+	{
+		start3 = (prototype *) malloc(sizeof(prototype));
+		start3 = enter_prototype_info(start3);
+		start3->next = NULL;
+	}
+	else
+	{
+		prototype *count_node1, *count_node2, *node;
+		node = (prototype *) malloc(sizeof(prototype));
+		node = enter_prototype_info(node);
+		for (count_node1 = start3; (count_node1 != NULL) && (strcmp(count_node1->name, node->name) <= 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1 == start3)
+		{
+			node->next = start3;
+			start3 = node;
+		}
+		else if (count_node1 == NULL)
+		{
+			count_node2->next = node;
+			node->next = NULL;
+		}
+		else
+		{
+			count_node2->next = node;
+			node->next = count_node1;
+		}
+	}
+	return start3;
+}
+
+
+prototype* enter_prototype_info(prototype *node)     // Function to enter the name of the prototype, this function is called 
+{                                                    // from the function create_prototype_node(prototype *start)by itself.   
+	printf(" Welcome to the prototype list\n");
+	printf("Please enter your prototype name\n");
+	fflush(stdin);
+	node->name = new char [80];
+	gets(node->name);
+	return node;
+}
+
+prototype* delete_prototype_node(prototype *start3)   // Function to delete the name of a prototype in the engine, function 
+{                                                     // searches for the name and deletes if it is found.
+	printf("\n");
+	if(start3 == NULL)
+	{
+		printf("\n");
+		printf("Sorry, the prototype list is empty\n");
+	}
+	else
+	{
+		char name[80];
+		printf("Please enter the prototype name you want to delete\n");
+		fflush(stdin);
+		gets(name);
+		prototype *count_node1, *count_node2;
+		prototype *temp;
+		for(count_node1 = start3; (count_node1 != NULL) && (strcmp(count_node1->name, name) != 0); count_node2 = count_node1, count_node1 = count_node1->next);
+		if(count_node1!= NULL)
+		{
+			if (count_node1 == start3)
+			{
+				temp = start3;
+				start3 = start3->next;
+				free(temp);
+			}
+			else if(count_node1->next == NULL && count_node1 != start3) 
+			{
+				temp = count_node1;
+				count_node2->next = NULL;
+				free (temp);
+			}
+			else
+			{
+				temp = count_node1;
+				count_node2->next = count_node1->next;
+				free (temp);
+			}
+		}
+		else 
+		{
+			printf("\n");
+			printf("Sorry, this name was not found in this list\n");
+		} 
+	}
+	return start3;
+}
+
+prototype* prototype_menu(prototype *start3)                   // Menu Function which is called from main and takes 
+{                                                              // over the program list after that              
+	printf("\n");                                                     
+	int choice;
+	printf("Welcome to the prototype menu\n");
+	printf("Please enter your choice from the menu shown below\n");
+	printf("1: Add a prototype to this engine\n");
+	printf("2: Delete a prototype from this engine\n");
+	printf("3: Display the prototype list for this engine\n");
+	printf("4: Return back to the Engine Menu\n");
+	scanf ("%d", &choice);
+	switch(choice)
+	{
+	case 1: 
+		{ 
+			start3 = create_prototype_node(start3);
+		} break;
+	case 2:
+		{  
+			start3 = delete_prototype_node(start3);
+		} break;
+	case 3:
+		{
+			print_prototype_list(start3);
+		} break;
+	case 4:
+		{
+			return start3;
+		} break;
+	default:
+		{
+			start3 = prototype_menu(start3);
+		} break;
+	}
+	start3 = prototype_menu(start3);
+	return start3;
+}
+
+
+
+void print_prototype_list(prototype *start3)
+{
+	printf("\n");
+	if (start3 == NULL)
+	{
+		printf("Sorry, the prototype list is empty\n");
+	}
+	else
+	{
+		prototype *count;
+		for (count = start3; count != NULL; count = count->next)
+		printf("%s\n", count->name);
+	}
+}
+
+#include iostream.h 
+#include cctype.h
+#include string.h
+#include cstring.h
+using namespace std;
+
+//Declare function proto type
+int assigntemplate(int temp_num, int row_num, int prototype_num);
+int num1(char*);
+int num2(char*);
+
+int Numtemplates = 18;
+
+void Initializetemplates();
+void Reserve();
+void Cancel();
+void Changetemplate();
+void Display();
+
+struct template 
+  {
+	  char prototype_name[80];
+	  int Available;
+	  int unavailable;
+  };
+  
+  struct template templateArray[18][12];
+  
+int main()
+{	  
+   char templatechioce = 0;
+   int row_num = 26;
+   char a = 0;
+   char z = 0;
+  
+  int total_prototype = 12;
+   
+  char arr1[26][9] = {"1A","2A","3A","4A","5A","6A","7A","8A","9A"};
+  char arr2[26][9] = {"1B","2B","3B","4B","5B","6B","7B","8B","9B"};
+	  char arr3[26][9] = {"1C","2C","3C","4C","5C","6C","7C","8C","9C"};
+	    char arr4[26][9] = {"1D","2B","3B","4B","5B","6B","7B","8B","9B"};
+	     char arr5[26][9] = {"1E","2B","3B","4B","5B","6B","7B","8B","9B"}; 
+	      char arr6[26][9] = {"1F","2B","3B","4B","5B","6B","7B","8B","9B"};
+	      char arr7[26][9] = {"1G","2B","3B","4B","5B","6B","7B","8B","9B"};
+	       char arr8[26][9] = {"1H","2H","3B","4B","5B","6B","7B","8B","9B"}; 
+	        char arr9[26][9] = {"1I","2B","3B","4B","5B","6B","7B","8B","9B"};
+	             char arr10[26][9] = {"1J","2B","3B","4B","5B","6B","7B","8B","9B"}; 
+	        char arr11[26][9] = {"1K","2B","3B","4B","5B","6B","7B","8B","9B"};
+	        char arr12[26][9] = {"1M","2B","3B","4B","5B","6B","7B","8B","9B"};
+  int MenuChoice;
+ 
+  Initializetemplates();
+  while(1)
+  {
+	  cout << " 1. Reserve" << endl;
+	  cout << " 2. Cancel" << endl;
+	  cout << " 3. Change template" << endl;
+	  cout << " 4. Display" << endl;
+	  cout << " 5. Exit" << endl;
+
+	  cout << "Enter your choice: ";
+	  cin >> MenuChoice;
+
+	if((MenuChoice < 0) && (MenuChoice > 5))
+	{
+	  cout << "Invalid Choice" << endl;
+	  system("Pause Try Again");
+	}
+	else
+	{
+		switch(MenuChoice)
+		{
+			case 1: Reserve();
+				break;
+			case 2: Cancel();
+				break;
+			case 3: Changetemplate();
+				break;
+			case 4: Display();
+				break;
+			case 5:
+				exit(1);
+		}
+	}
+	cin.get();  
+  }
+  
+return 0; 
+
+}
+void Reserve() //This function is for reserv the seats
+{
+	int prototype_num = 0;
+
+	cout << "Wellcome to mainframe prototype template assignment" << endl;
+		 
+	 cout << "All " << Numtemplates << " template are available " << endl;
+	
+	 for(int i = 0; i < 18; i++)
+	 {
+		 for(int j = 0; j < 12; j++)
+		 {
+			 if(templateArray[i][j].Available == 1)
+			 {
+				 cout << "Please enter the prototype name: ";
+				 cin >> templateArray[i][j].prototype_name;
+				 templateArray[i][j].Available = 0;
+				 Numtemplates--;
+				 return;
+			 }
+		 }
+		 
+	 }
+}
+void Cancel()// This function is for Cancel the seat
+{
+	char CancelPassengerName[80];
+
+	cout << "Enter the prototype to be cancelled: ";
+	cin >> CanceltemplateName;
+	for(int i =0; i <18; i++)
+	{
+		for(int j=0; j<12; j++)
+		{
+			
+			if(strcmp(templateArray[i][j].temeplate_name, CanceltemeplateName) == 0) 
+			{
+				Numtemplates++;
+				templateArray[i][j].Available = 1;
+				return;
+			}
+		}
+	}
+	cout << " prototype not in the list" << endl;
+}
+void Changetemplate()//This function is for Change the seat
+{
+	char Movetemplate[80];
+	int templateRow, templateColumn;
+
+	cout << "Enter the prototype name to be moved: ";
+	cin >> Movetemplate;
+
+	for(int i = 0; i < 18; i++)
+	{	for(int j = 0; j < 12; j++)
+		{
+			if(strcmp(templateArray[i][j].prototype_name, Movetemplate) == 0) 
+			{
+				templateRow = i;
+				templateColumn = j;
+			}
+		}
+	}
+
+	if(Numtemplates <= 0)
+	{
+		cout << "No template available there for you cannot change template" << endl;
+		return;
+	}
+	else{
+		for(int i = 0; i < 18; i++)
+		{
+			for(int j = 0; j < 12; j++)
+			{
+				if(templateArray[i][j].Available == 1)
+				{
+					strcpy_s(templateArray[i][j].prototype_name, Move);
+					templateArray[templateRow][templateColumn].Available = 1;
+					templateArray[i][j].Available = 0;
+
+					return;
+				}
+			}
+		}
+	}
+}
+void Display()//Display the seat assingment for the all reservation
+{
+	for(int i = 0; i < 18; i++)
+	{
+		for(int j = 0; j < 12; j++)
+		{
+			if(templateArray[i][j].Available == 0)
+			{
+				cout << templateArray[i][j].prototype_name << " = " << Numtemplates << endl;
+			}
+			else
+			{
+				if(j == 1)
+				
+				
+					cout << i+1 << "L" << endl;
+	else				
+					cout << i+1 << "K" << endl;
+				else
+					cout << i+1 << "J" << endl;
+				else
+	cout << i+1 << "I" << endl;
+	else				
+					cout << i+1 << "H" << endl;
+				else
+					cout << i+1 << "G" << endl;	
+				cout << i+1 << "F" << endl;
+	else				
+					cout << i+1 << "E" << endl;
+				else
+					cout << i+1 << "D" << endl;
+				
+	cout << i+1 << "C" << endl;
+	else				
+					cout << i+1 << "B" << endl;
+				else
+					cout << i+1 << "A" << endl;
+			}
+		}
+	}
+}
+
+void Initializetemplates()//Initialy all seats are available
+{
+	for(int i = 0; i < 18; i++)
+	{
+		for(int j = 0; j < 12; j++)
+			templateArray[i][j].Available = 1;
+	}
+}
+
+//--------------------------------- MAIN FUNCTION CALLING THE MENU FUNCTION ------------------------------------------------
+
+
+
+//***************************************************************
+//    	THE MAIN FUNCTION OF PROGRAM
+//****************************************************************
+
+
+void main()
+{
+  char ch;
+  intro();
+  do
+    {
+	  clrscr();
+	  cout<<"\n\n\n\tMAIN MENU";
+	  cout<<"\n\n\t01. CUSTOMER";
+	  cout<<"\n\n\t02. ADMINISTRATOR";
+	  count<<"\n\nt03. MAINFRAME";
+	  	  cout<<"\n\n\t04. ENGINE";
+	  	  	  cout<<"\n\n\t05. PROTOTYPE";
+	  	  	  	  cout<<"\n\n\t06. "TEMPLATE";
+	  cout<<"\n\n\t0. EXIT";
+	  cout<<"\n\n\tPlease Select Your Option (1-0) ";
+	  ch=getche();
+	  switch(ch)
+	  {
+		 case '1': clrscr();
+			   place_order();
+			   getch();
+			   break;
+		  case '2': admin_menu();
+			    break;
+			    	  case '3': mainframe_menu();
+			    break;
+			      case '4': engine_menu();
+			    break;
+			      case '5': prototype_menu();
+			    break;
+			      case '6': template_menu();
+			    break;
+		  case '0':exit(0);
+		  default :cout<<"\a";
+	}
+    }while(ch!='3');
+}
+
+
+{start1 = save_to_file();
+	start1 = read_from_file();
+	start1 = mainframe_menu(start1);
+}	start1 = prototype_menu(start1);
+		start1 = template_menu(start1);
+} start1 = load_menu(start1);
+start1 = save_menu(start1);
+}start1 = game_menu(start1);
+
+
+//***************************************************************
+//    			END OF statment
+//***************************************************************
